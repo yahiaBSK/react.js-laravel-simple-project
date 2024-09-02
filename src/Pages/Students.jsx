@@ -15,27 +15,39 @@ import StudentEdit from "./StudentEdit";
 import axios from "axios";
 import Api from "../api/api";
 import { studentStore } from "../stores/studentsStore";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Students() {
-
-  const studentss = () => {
-    
-    const studentses = studentStore.getState().students;
-    console.log(studentses);
-    studentStore.getState().addStudent(["yahiaaaaaa"]);
-    console.log(studentses);
-    
-  };
-
   const [data, setdata] = useState();
   const [tableIsLoading, setTableIsLoading] = useState(true);
 
-  useEffect(() => {
-    getStudents();
-    studentss();
-  }, []);
+  const getStudentsData = useQuery({
+    queryKey: ["student"],
+    queryFn: async () => {
+      const getdata = await axios.get(`${Api}/students`);
+      return getdata.data;
+    },
+    cacheTime: 1000 * 5 * 60,
+    staleTime: 1000 * 5 * 60,
+  });
+  const { data: stdData, isLoading, error } = getStudentsData;
 
-  async function getStudents() {
+  useEffect(() => {
+    if (isLoading) {
+      console.log("Loading...");
+    } else if (error) {
+      console.log("error loading students", error);
+    } else if (stdData) {
+      console.log("data is here !!", stdData);
+      setdata(stdData)
+    }
+  }, [error, isLoading]);
+
+  useEffect(() => {
+    // getStudents()
+  }, [isLoading]);
+
+  async function getStudents(){
     const fHandle = await axios
       .get(`${Api}/students`)
       .then(
